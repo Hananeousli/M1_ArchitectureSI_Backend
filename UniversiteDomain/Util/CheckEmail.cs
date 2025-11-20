@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 namespace UniversiteDomain.Util;
 
-public class classe_CheckEmail
+public class CheckEmail
 {
     public static bool IsValidEmail(string email)
     {
