@@ -3,10 +3,12 @@ namespace UniversiteDomain.DataAdapters.DataAdaptersFactory;
 public interface IRepositoryFactory
 {
     IParcoursRepository ParcoursRepository();
-    INoteRepository NoteRepository();
-    IUeRepository UeRepository();
-    
     IEtudiantRepository EtudiantRepository();
+    IUeRepository UeRepository();
+    IUniversiteRoleRepository UniversiteRoleRepository();
+    IUniversiteUserRepository UniversiteUserRepository();
+    
+    INoteRepository NoteRepository();
     // Méthodes de gestion de la dadasource
     // Ce sont des méthodes qui permettent de gérer l'ensemble du data source
     // comme par exemple tout supprimer ou tout créer

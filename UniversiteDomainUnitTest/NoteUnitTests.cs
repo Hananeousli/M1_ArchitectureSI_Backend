@@ -4,6 +4,7 @@ using UniversiteDomain.DataAdapters;
 using UniversiteDomain.DataAdapters.DataAdaptersFactory;
 using UniversiteDomain.Entities;
 using UniversiteDomain.UseCases.NoteUseCases;
+using UniversiteDomain.UseCases.NoteUseCases.Create;
 
 namespace UniversiteDomainUnitTest;
 

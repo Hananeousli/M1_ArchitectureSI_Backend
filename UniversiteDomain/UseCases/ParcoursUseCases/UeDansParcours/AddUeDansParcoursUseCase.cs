@@ -35,35 +35,41 @@ public class AddUeDansParcoursUseCase(IRepositoryFactory repositoryFactory)
         return await repositoryFactory.ParcoursRepository().AddUeAsync(idParcours, idUes);
       }   
 
-    private async Task CheckBusinessRules(long idParcours, long idUe)
-    {
-        // Vérification des paramètres
-        ArgumentNullException.ThrowIfNull(idParcours);
-        ArgumentNullException.ThrowIfNull(idUe);
+      private async Task CheckBusinessRules(long idParcours, long idUe)
+      {
+          // Vérification des paramètres
+          ArgumentNullException.ThrowIfNull(idParcours);
+          ArgumentNullException.ThrowIfNull(idUe);
+    
+          ArgumentOutOfRangeException.ThrowIfNegativeOrZero(idParcours);
+          ArgumentOutOfRangeException.ThrowIfNegativeOrZero(idUe);
+    
+          // Vérifions tout d'abord que nous sommes bien connectés aux datasources
+          ArgumentNullException.ThrowIfNull(repositoryFactory);
+          ArgumentNullException.ThrowIfNull(repositoryFactory.UeRepository());
+          ArgumentNullException.ThrowIfNull(repositoryFactory.ParcoursRepository()); // ← CORRIGÉ (c'était UeRepository() deux fois)
+    
+          // On recherche l'ue
+          List<Ue> ue = await repositoryFactory.UeRepository().FindByConditionAsync(e => e.Id.Equals(idUe));
+          if (ue == null || ue.Count == 0) throw new UeNotFoundException(idUe.ToString());
+    
+          // On recherche le parcours
+          List<Parcours> parcours = await repositoryFactory.ParcoursRepository().FindByConditionAsync(p => p.Id.Equals(idParcours));
+          if (parcours == null || parcours.Count == 0) throw new ParcoursNotFoundException(idParcours.ToString());
+    
+          // On vérifie que l'Ue n'est pas déjà dans le parcours
+          if (parcours[0].UesEnseignees != null && parcours[0].UesEnseignees.Count > 0)
+          {
+              // Des ues sont déjà enregistrées dans le parcours
+              // On recherche si l'ue qu'on veut ajouter n'existe pas déjà
+              List<Ue> inscrites = parcours[0].UesEnseignees;
         
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(idParcours);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(idUe);
-        
-        // Vérifions tout d'abord que nous sommes bien connectés aux datasources
-        ArgumentNullException.ThrowIfNull(repositoryFactory);
-        ArgumentNullException.ThrowIfNull(repositoryFactory.UeRepository());
-        ArgumentNullException.ThrowIfNull(repositoryFactory.UeRepository());
-        
-        // On recherche l'ue
-        List<Ue> ue = await repositoryFactory.UeRepository().FindByConditionAsync(e=>e.Id.Equals(idUe));;
-        if (ue ==null) throw new UeNotFoundException(idUe.ToString());
-        // On recherche le parcours
-        List<Parcours> parcours = await repositoryFactory.ParcoursRepository().FindByConditionAsync(p=>p.Id.Equals(idParcours));;
-        if (parcours ==null) throw new ParcoursNotFoundException(idParcours.ToString());
-        
-        // On vérifie que l'Ue n'est pas déjà dans le parcours
-        if (parcours[0].UesEnseignees!=null)
-        {
-            // Des ues sont déjà enregistrées dans le parcours
-            // On recherche si l'ue qu'on veut ajouter n'existe pas déjà
-            List<Ue> inscrites = parcours[0].UesEnseignees;    
-            var trouve=inscrites.FindAll(e=>e.Id.Equals(idUe));
-            if (trouve !=null) throw new DuplicateUeDansParcoursException(idUe+" est déjà présente dans le parcours : "+idParcours);   
-        }
-    }
+              // CORRECTION ICI : FindAll retourne une liste vide si rien n'est trouvé, jamais null
+              var trouve = inscrites.FindAll(e => e.Id.Equals(idUe));
+              if (trouve.Count > 0) // ← CHANGEMENT : vérifier Count au lieu de null
+              {
+                  throw new DuplicateUeDansParcoursException(idUe + " est déjà présente dans le parcours : " + idParcours);
+              }
+          }
+      }
 }
